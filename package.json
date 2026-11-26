@@ -1,0 +1,7 @@
+{
+  "name": "ownet-ai-walk-through",
+  "private": true,
+  "description": "Ownet AI interactive walk-through, shown inside the draft ownet.co.uk AI pages. Hidden from search engines.",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
