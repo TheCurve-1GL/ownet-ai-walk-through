@@ -1,15 +1,17 @@
 // Two sites from one repository, chosen by the SITE variable on Railway:
 //   (default) the Ownet AI walk-through, shown inside the draft Ownet pages
 //   SITE=demo  the draft Ownet AI pages for Jeremy, with videos
+//   SITE=aviation  the draft aviation campaign site (shares demo/media for videos)
 // Both are hidden from search engines.
 const http = require("http");
 const fs = require("fs");
 const path = require("path");
 
 const SITE = process.env.SITE || "walk-through";
-const ROOT = path.join(__dirname, SITE === "demo" ? "demo" : "public");
+const ROOT = path.join(__dirname, SITE === "demo" ? "demo" : SITE === "aviation" ? "aviation" : "public");
 const HOME = SITE === "demo" ? "ai-transformation.html" : "index.html";
-const TYPES = { ".html": "text/html; charset=utf-8", ".mp4": "video/mp4", ".jpg": "image/jpeg", ".png": "image/png", ".css": "text/css", ".js": "text/javascript" };
+const MEDIA = path.join(__dirname, "demo", "media");
+const TYPES = { ".html": "text/html; charset=utf-8", ".mp4": "video/mp4", ".jpg": "image/jpeg", ".png": "image/png", ".css": "text/css", ".js": "text/javascript", ".svg": "image/svg+xml" };
 const base = { "X-Robots-Tag": "noindex, nofollow" };
 
 http.createServer((req, res) => {
@@ -18,8 +20,10 @@ http.createServer((req, res) => {
   if (url === "/robots.txt") { res.writeHead(200, { ...base, "Content-Type": "text/plain" }); return res.end("User-agent: *\nDisallow: /\n"); }
   if (url === "/health") { res.writeHead(200, { "Content-Type": "text/plain" }); return res.end("ok"); }
   const rel = url === "/" ? HOME : url.replace(/^\/+/, "");
-  const file = path.join(ROOT, rel);
-  if (!file.startsWith(ROOT + path.sep)) { res.writeHead(400); return res.end(); }
+  const useMedia = SITE === "aviation" && rel.startsWith("media/");
+  const base_ = useMedia ? MEDIA : ROOT;
+  const file = path.join(base_, useMedia ? rel.slice(6) : rel);
+  if (!file.startsWith(base_ + path.sep)) { res.writeHead(400); return res.end(); }
   fs.stat(file, (err, st) => {
     if (err || !st.isFile()) { res.writeHead(404, { ...base, "Content-Type": "text/plain" }); return res.end("Not found"); }
     const type = TYPES[path.extname(file)] || "application/octet-stream";
